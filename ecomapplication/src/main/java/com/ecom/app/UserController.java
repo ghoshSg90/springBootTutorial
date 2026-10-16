@@ -1,6 +1,8 @@
 package com.ecom.app;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -15,20 +17,39 @@ public class UserController {
     }
 
     @GetMapping("/api/users")
-    public List<User> getAllUsers(){
-        return userService.fetchAllUsers();
+    public ResponseEntity<List<User>> getAllUsers(){
+        //return ResponseEntity.ok(userService.fetchAllUsers());
+        return new ResponseEntity<>(userService.fetchAllUsers(),
+                                        HttpStatus.OK);
     }
 
     @GetMapping("/api/users/{id}")
-    public User getUser(@PathVariable Long id){
-        return userService.getUserById(id);
+    public ResponseEntity<User> getUser(@PathVariable Long id){
+//        User returnUser = userService.getUserById(id);
+//        if(returnUser == null)
+//            return ResponseEntity.notFound().build();
+//
+//        return ResponseEntity.ok(returnUser);
+
+        return userService.getUserById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("api/users")
-    public String createUser(@RequestBody User user){
+    public ResponseEntity<String> createUser(@RequestBody User user){
         userService.addUser(user);
 
-        return "User added successfully";
+        return ResponseEntity.ok("User Added Successfully");
+    }
+
+    @PutMapping("api/users/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id,
+                                           @RequestBody User updatedUser){
+        boolean updated = userService.updateUserById(id, updatedUser);
+        if(updated)
+            return ResponseEntity.ok("User Updated Successfully");
+        return ResponseEntity.notFound().build();
     }
 
 }
